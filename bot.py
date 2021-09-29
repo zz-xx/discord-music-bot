@@ -19,12 +19,6 @@ else:
         config = json.load(file)
 
 
-'''bot = Bot(
-    command_prefix=config["bot_prefix"],
-    case_insensitive=True,
-    intents=discord.Intents.all(),
-    help_command=None,
-) '''
 bot = core.Bot(
     command_prefix=config["bot_prefix"],
     case_insensitive=True,
