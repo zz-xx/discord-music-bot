@@ -13,8 +13,8 @@ from discord_slash.cog_ext import cog_component
 from discord_slash.utils import manage_commands, manage_components
 from discord_slash.model import ButtonStyle
 
-#really didn't want to do this
-GUILD_IDS = [318353359197306880, 404681481110290462, 435683837641621514, 276023312604463105]
+# really didn't want to do this
+GUILD_IDS = [435683837641621514]
 
 
 class GameState(enum.IntEnum):

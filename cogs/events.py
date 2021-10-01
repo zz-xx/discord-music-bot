@@ -21,7 +21,11 @@ class Events(commands.Cog):
         print(f"Running on: {platform.system()} {platform.release()} ({os.name})")
         print("-------------------")
 
-        await self.bot.change_presence(activity=discord.Streaming(name='Use slash commands.', url='https://www.twitch.tv/pewdiepie'))
+        await self.bot.change_presence(
+            activity=discord.Streaming(
+                name="Use slash commands.", url="https://www.twitch.tv/pewdiepie"
+            )
+        )
 
     @commands.Cog.listener()
     async def on_message(self, message):

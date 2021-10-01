@@ -9,11 +9,13 @@ from discord.ext import commands
 from discord_slash import cog_ext, SlashContext
 
 from helpers.audio.exception_handler import *
-from helpers.audio.queue import Queue, RepeatMode
+from helpers.audio.queue import RepeatMode
 from helpers.audio.player import Player
 
-#really didn't want to do this
-GUILD_IDS = [318353359197306880, 404681481110290462, 435683837641621514, 276023312604463105]
+
+# really didn't want to do this
+GUILD_IDS = [435683837641621514]
+
 
 class Audio(commands.Cog, wavelink.WavelinkMixin):
 
@@ -42,8 +44,8 @@ class Audio(commands.Cog, wavelink.WavelinkMixin):
         self.bot = bot
         self.wavelink = wavelink.Client(bot=bot)
         self.bot.loop.create_task(self.start_nodes())
-        #global GUILD_IDS
-        #GUILD_IDS = self.bot.config['guild_ids']
+        # global GUILD_IDS
+        # GUILD_IDS = self.bot.config['guild_ids']
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -73,18 +75,7 @@ class Audio(commands.Cog, wavelink.WavelinkMixin):
 
     async def start_nodes(self):
         await self.bot.wait_until_ready()
-
-        nodes = {
-            "MAIN": {
-                "host": "127.0.0.1",
-                "port": 2333,
-                "rest_uri": "http://127.0.0.1:2333",
-                "password": "youshallnotpass",
-                "identifier": "MAIN",
-                "region": "europe",
-            }
-        }
-
+        nodes = self.bot.config["nodes"]
         for node in nodes.values():
             await self.wavelink.initiate_node(**node)
 
@@ -99,9 +90,17 @@ class Audio(commands.Cog, wavelink.WavelinkMixin):
         name="connect", description="Connect to a VC.", guild_ids=GUILD_IDS
     )
     async def connect_command(self, ctx, *, channel: t.Optional[discord.VoiceChannel]):
-        player = self.get_player(ctx)
-        channel = await player.connect(ctx, channel)
-        await ctx.send(f"Connected to {channel.name}.")
+        if ctx.author.id in ctx.bot.config["owners"]:
+            player = self.get_player(ctx)
+            channel = await player.connect(ctx, channel)
+            await ctx.send(f"Connected to {channel.name}.")
+        else:
+            embed = discord.Embed(
+                title="Error!",
+                description="You don't have the permission to use this command.",
+                color=0xE02B2B,
+            )
+            await ctx.send(embed=embed)
 
     @connect_command.error
     async def connect_command_error(self, ctx, exc):
@@ -141,11 +140,74 @@ class Audio(commands.Cog, wavelink.WavelinkMixin):
             await ctx.send("Playback resumed.")
 
         else:
-            query = query.strip("<>")
-            if not re.match(self.url_regex, query):
-                query = f"ytsearch:{query}"
+            if "https://open.spotify.com/track" in query:
+                await ctx.send("Spotify track detected.")
+                response = await ctx.bot.spotify_client.track(track_id=query)
+                query = f"{response['name']} {response['album']['artists'][0]['name']}"
+                if not re.match(self.url_regex, query):
+                    query = f"ytsearch:{query}"
 
-            await player.add_tracks(ctx, await self.wavelink.get_tracks(query))
+                test = await self.wavelink.get_tracks(query)
+
+                try:
+                    await player.add_spotify_tracks(ctx, [test[0]])
+                    await ctx.send(f"Added {response['name']} to queue.")
+                except Exception as e:
+                    print(e)
+
+            elif "https://open.spotify.com/playlist" in query:
+                await ctx.send("Spotify playlist detected.")
+                response = await ctx.bot.spotify_client.playlist_items(
+                    query,
+                    offset=0,
+                    fields="items.track.name,items.track.artists.name,total",
+                    additional_types=["track"],
+                )
+
+                for item in response["items"]:
+
+                    query = f"{item['track']['name']} {item['track']['artists'][0]['name']}".strip(
+                        "<>"
+                    )
+                    if not re.match(self.url_regex, query):
+                        query = f"ytsearch:{query}"
+
+                    test = await self.wavelink.get_tracks(query)
+
+                    try:
+                        await player.add_spotify_tracks(ctx, [test[0]])
+                    except Exception as e:
+                        print(e)
+
+                await ctx.send(f"Added {response['total']} tracks.")
+
+            elif "https://open.spotify.com/album" in query:
+                await ctx.send("Spotify album detected.")
+                response = await ctx.bot.spotify_client.album_tracks(query)
+                artist_name = response["items"][0]["artists"][0]["name"]
+                print(artist_name)
+
+                for item in response["items"]:
+
+                    query = f"{item['name']} {artist_name}"
+                    if not re.match(self.url_regex, query):
+                        query = f"ytsearch:{query}"
+
+                    test = await self.wavelink.get_tracks(query)
+
+                    try:
+                        await player.add_spotify_tracks(ctx, [test[0]])
+                    except Exception as e:
+                        print(e)
+
+                await ctx.send(f"Added {response['total']} tracks.")
+
+            else:
+                query = query.strip("<>")
+                if not re.match(self.url_regex, query):
+                    query = f"ytsearch:{query}"
+
+                await player.add_tracks(ctx, await self.wavelink.get_tracks(query))
 
     @play_command.error
     async def play_command_error(self, ctx, exc):

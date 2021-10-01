@@ -1,13 +1,6 @@
 from asyncio import TimeoutError
-import datetime as dt
-from os import chdir
-
-import discord
-from discord.ext.commands.core import check
 import wavelink
-from discord_slash.model import ButtonStyle, ContextMenuType
 from discord_slash.utils.manage_components import (
-    create_button,
     create_actionrow,
     create_select,
     create_select_option,
@@ -31,7 +24,8 @@ class Player(wavelink.Player):
         if (channel := getattr(ctx.author.voice, "channel", channel)) is None:
             raise NoVoiceChannel
 
-        await super().connect(channel.id)
+        # had to rummage around code to find this self_deaf bool lol, nothing in docs
+        await super().connect(channel.id, self_deaf=True)
         return channel
 
     async def teardown(self):
@@ -57,7 +51,20 @@ class Player(wavelink.Player):
         if not self.is_playing and not self.queue.is_empty:
             await self.start_playback()
 
+    async def add_spotify_tracks(self, ctx, tracks):
+
+        if not tracks:
+            raise NoTracksFound
+
+        self.queue.add(tracks[0])
+        # await ctx.send(f"Added {tracks[0].title} to the queue.")
+
+        if not self.is_playing and not self.queue.is_empty:
+            await self.start_playback()
+
     async def choose_track(self, ctx, tracks):
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
 
         search_results = [
             f"{t.title} ({t.length//60000}:{str(t.length%60).zfill(2)})"
@@ -86,13 +93,14 @@ class Player(wavelink.Player):
         while True:
             try:
                 button_ctx = await wait_for_component(
-                    self.bot, components=ar, timeout=60
+                    self.bot, components=ar, timeout=60, check=check
                 )
                 await button_ctx.send(
                     f"You selected **{search_results[int(button_ctx.selected_options[0])]}**!",
                     hidden=True,
                 )
                 # print(button_ctx.selected_options)
+                # print(type(tracks[0]))
                 return tracks[int(button_ctx.selected_options[0])]
 
             except TimeoutError:

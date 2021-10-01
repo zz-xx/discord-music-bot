@@ -182,3 +182,4 @@ $RECYCLE.BIN/
 
 # Custom rules 
 config.json
+.cache

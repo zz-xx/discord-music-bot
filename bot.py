@@ -1,33 +1,35 @@
-import json
 import os
-import platform
-import random
-import sys
 
 import discord
-from discord.ext import tasks
-from discord.ext.commands import Bot
-from discord_slash import SlashCommand, SlashContext
+from discord.ext import commands
+from discord_slash import SlashCommand
 
 from helpers import core
 
+intents = discord.Intents.default()
 
-if not os.path.isfile("config.json"):
-    sys.exit("'config.json' not found! Please add it and try again.")
-else:
-    with open("config.json") as file:
-        config = json.load(file)
-
+intents.bans = False
+intents.dm_messages = False
+intents.integrations = False
+intents.invites = False
+intents.reactions = False
+intents.typing = False
+intents.presences = False
+intents.webhooks = False
+intents.members = True
 
 bot = core.Bot(
-    command_prefix=config["bot_prefix"],
+    command_prefix="",
     case_insensitive=True,
-    intents=discord.Intents.all(),
+    intents=intents,
     help_command=None,
-    config_file = "config.json"
+    config_file="config.json",
 )
+
 bot.load_config()
-#print(bot.config)
+bot.command_prefix = commands.when_mentioned_or([bot.config["bot_prefix"]])
+bot.load_spotify_client()
+
 slash = SlashCommand(bot, sync_commands=True)
 
 
@@ -45,4 +47,4 @@ if __name__ == "__main__":
                 except Exception as error:
                     print(f"Unable to load {module}: {error}")
 
-bot.run(config["token"])
+bot.run(bot.config["token"])
