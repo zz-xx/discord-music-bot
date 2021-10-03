@@ -7,8 +7,8 @@ import aiohttp
 import discord
 import wavelink
 from discord.ext import commands
+from discord_slash import cog_ext
 from discord.ext.commands import CommandError
-from discord_slash import cog_ext, SlashContext
 from discord_slash.error import SlashCommandError
 
 

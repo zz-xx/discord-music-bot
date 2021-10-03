@@ -1,0 +1,4 @@
+discord == 1.7.3
+discord_slash == 3.0.2
+wavelink == 0.9.10
+psutil == 5.8.0

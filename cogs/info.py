@@ -1,5 +1,3 @@
-from datetime import datetime
-import json
 import os
 import psutil
 from random import choice
@@ -8,7 +6,6 @@ import sys
 import discord
 from discord.ext import commands
 from discord_slash import cog_ext, SlashContext
-from discord_slash.utils.manage_commands import create_option
 
 #really didn't want to do this
 GUILD_IDS = [435683837641621514]
