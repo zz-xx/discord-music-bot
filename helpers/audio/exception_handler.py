@@ -1,69 +1,70 @@
-from discord.ext import commands
+from discord.ext.commands import CommandError
+from discord_slash.error import SlashCommandError
 
 
-class AlreadyConnectedToChannel(commands.CommandError):
+class AlreadyConnectedToChannel(SlashCommandError, CommandError):
     pass
 
 
-class NoVoiceChannel(commands.CommandError):
+class NoVoiceChannel(SlashCommandError, CommandError):
     pass
 
 
-class QueueIsEmpty(commands.CommandError):
+class QueueIsEmpty(SlashCommandError, CommandError):
     pass
 
 
-class NoTracksFound(commands.CommandError):
+class NoTracksFound(SlashCommandError, CommandError):
     pass
 
 
-class PlayerIsAlreadyPaused(commands.CommandError):
+class PlayerIsAlreadyPaused(SlashCommandError, CommandError):
     pass
 
 
-class NoMoreTracks(commands.CommandError):
+class NoMoreTracks(SlashCommandError, CommandError):
     pass
 
 
-class NoPreviousTracks(commands.CommandError):
+class NoPreviousTracks(SlashCommandError, CommandError):
     pass
 
 
-class InvalidRepeatMode(commands.CommandError):
+class InvalidRepeatMode(SlashCommandError, CommandError):
     pass
 
 
-class VolumeTooLow(commands.CommandError):
+class VolumeTooLow(SlashCommandError, CommandError):
     pass
 
 
-class VolumeTooHigh(commands.CommandError):
+class VolumeTooHigh(SlashCommandError, CommandError):
     pass
 
 
-class MaxVolume(commands.CommandError):
+class MaxVolume(SlashCommandError, CommandError):
     pass
 
 
-class MinVolume(commands.CommandError):
+class MinVolume(SlashCommandError, CommandError):
     pass
 
 
-class NoLyricsFound(commands.CommandError):
+class NoLyricsFound(SlashCommandError, CommandError):
     pass
 
 
-class InvalidEQPreset(commands.CommandError):
+class InvalidEQPreset(SlashCommandError, CommandError):
     pass
 
 
-class NonExistentEQBand(commands.CommandError):
+class NonExistentEQBand(SlashCommandError, CommandError):
     pass
 
 
-class EQGainOutOfBounds(commands.CommandError):
+class EQGainOutOfBounds(SlashCommandError, CommandError):
     pass
 
 
-class InvalidTimeString(commands.CommandError):
+class InvalidTimeString(SlashCommandError, CommandError):
     pass

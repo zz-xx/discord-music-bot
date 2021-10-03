@@ -23,11 +23,11 @@ bot = core.Bot(
     case_insensitive=True,
     intents=intents,
     help_command=None,
-    config_file="config.json",
+    config_file = "config.json"
 )
 
 bot.load_config()
-bot.command_prefix = commands.when_mentioned_or([bot.config["bot_prefix"]])
+bot.command_prefix = commands.when_mentioned_or(bot.config['bot_prefix'])
 bot.load_spotify_client()
 
 slash = SlashCommand(bot, sync_commands=True)
@@ -47,4 +47,4 @@ if __name__ == "__main__":
                 except Exception as error:
                     print(f"Unable to load {module}: {error}")
 
-bot.run(bot.config["token"])
+bot.run(bot.config['token'])
