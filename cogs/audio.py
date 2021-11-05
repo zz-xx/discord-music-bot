@@ -16,9 +16,6 @@ from helpers.audio.exception_handler import *
 from helpers.audio.queue import RepeatMode
 from helpers.audio.player import Player
 
-#really didn't want to do this
-GUILD_IDS = [435683837641621514]
-
 
 class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
 
@@ -100,7 +97,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
             )
             await ctx.send(embed=embed)
 
-    @cog_ext.cog_slash(name="connect", description="Connect to a VC.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="connect", description="Connect to a VC.")
     async def connect_slash(self, ctx, *, channel: t.Optional[discord.VoiceChannel]):
        await self.connect(ctx, channel=channel)
     
@@ -137,7 +134,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         await player.teardown()
         await ctx.send(f"Disconnected by {ctx.author}.")
     
-    @cog_ext.cog_slash(name="disconnect", description="Disconnect from a VC.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="disconnect", description="Disconnect from a VC.")
     async def disconnect_slash(self, ctx):
         await self.disconnect_player(ctx)
 
@@ -231,7 +228,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
 
                 await player.add_tracks(ctx, await self.wavelink.get_tracks(query))
 
-    @cog_ext.cog_slash(name="play", description="Play music.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="play", description="Play music.")
     async def play_slash(self, ctx, *, audio: t.Optional[str]):
         await self.play(ctx, audio=audio)
     
@@ -359,7 +356,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
                 
                 await ctx.send(f"Added **{test[0].title}** to queue.")
     
-    @cog_ext.cog_slash(name="p", description="Same as play but without select dropdown.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="p", description="Same as play but without select dropdown.")
     async def no_select_play_slash(self, ctx, *, audio: t.Optional[str]):
         await self.no_select_play(ctx, audio=audio)
     
@@ -400,7 +397,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         await player.set_pause(True)
         await ctx.send("Playback paused.")
     
-    @cog_ext.cog_slash(name="pause", description="Pause currently playing song.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="pause", description="Pause currently playing song.")
     async def pause_slash(self, ctx):
         await self.pause(ctx)
     
@@ -432,7 +429,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         await player.stop()
         await ctx.send("Playback stopped.")
     
-    @cog_ext.cog_slash(name="stop", description="Stop the playback.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="stop", description="Stop the playback.")
     async def stop_slash(self, ctx):
         await self.stop(ctx)
 
@@ -451,7 +448,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         await player.stop()
         await ctx.send("Playing next track in queue.")
     
-    @cog_ext.cog_slash(name="next", description="Skip the currently playing song.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="next", description="Skip the currently playing song.")
     async def next_slash(self, ctx):
         await self.next(ctx)
     
@@ -491,7 +488,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         await player.stop()
         await ctx.send("Playing previous track in queue.")
     
-    @cog_ext.cog_slash(name="previous", description="Play previous song in queue.", guild_ids=GUILD_IDS,)
+    @cog_ext.cog_slash(name="previous", description="Play previous song in queue.",)
     async def previous_slash(self, ctx):
         await self.previous(ctx)
     
@@ -526,7 +523,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         player.queue.shuffle()
         await ctx.send("Queue shuffled.")
     
-    @cog_ext.cog_slash(name="shuffle", description="Shuffle the queue.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="shuffle", description="Shuffle the queue.")
     async def shuffle_slash(self, ctx):
         await self.shuffle(ctx)
     
@@ -560,7 +557,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         player.queue.set_repeat_mode(mode)
         await ctx.send(f"The repeat mode has been set to {mode}.")
 
-    @cog_ext.cog_slash(name="repeat", description="Repeat one or all songs.", guild_ids=GUILD_IDS,)
+    @cog_ext.cog_slash(name="repeat", description="Repeat one or all songs.",)
     async def repeat_slash(self, ctx, mode: str):
         await self.repeat(ctx, mode)
     
@@ -619,7 +616,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
 
         await ctx.send(embed=embed)
     
-    @cog_ext.cog_slash(name="queue", description="Show current queue.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="queue", description="Show current queue.")
     async def queue_slash(self, ctx):
         await self.queue(ctx)
     
@@ -657,7 +654,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         await player.set_volume(volume)
         await ctx.send(f"Volume set to {volume:,}%")
     
-    @cog_ext.cog_slash(name="volume", description="Manipulate volume from 0 to 150", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="volume", description="Manipulate volume from 0 to 150")
     async def volume_slash(self, ctx, volume: int):
         await self.volume(ctx, volume)
 
@@ -708,7 +705,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
             embed.set_author(name=data["author"])
             await ctx.send(embed=embed)
     
-    @cog_ext.cog_slash(name="lyrics", description="Show lyrics of song that's playing.", guild_ids=GUILD_IDS)
+    @cog_ext.cog_slash(name="lyrics", description="Show lyrics of song that's playing.")
     async def lyrics_slash(self, ctx):
         await self.lyrics(ctx)
     
@@ -744,7 +741,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         await player.set_eq(eq())
         await ctx.send(f"Equaliser adjusted to the {preset} preset.")
     
-    @cog_ext.cog_slash(name="equalizer", description="Select an equalizer preset from 'flat', 'boost', 'metal', or 'piano'", guild_ids=GUILD_IDS,)
+    @cog_ext.cog_slash(name="equalizer", description="Select an equalizer preset from 'flat', 'boost', 'metal', or 'piano'",)
     async def equalizer_slash(self, ctx, preset: str):
         await self.equalizer(ctx, preset)
     
@@ -789,7 +786,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         await player.set_eq(eq)
         await ctx.send("Equaliser adjusted.")
     
-    @cog_ext.cog_slash(name="advance-equalizer", description="Band number between 1 and 15 and EQ gain between 10 dB and -10 dB.", guild_ids=GUILD_IDS,)
+    @cog_ext.cog_slash(name="advance-equalizer", description="Band number between 1 and 15 and EQ gain between 10 dB and -10 dB.",)
     async def advance_equalizer_slash(self, ctx, band: int, gain: float):
         await self.advance_equalizer(ctx, band, gain)
 
@@ -864,8 +861,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
 
     @cog_ext.cog_slash(
         name="playing",
-        description="Playback Information",
-        guild_ids=GUILD_IDS,
+        description="Playback Information"
     )
     async def playing_slash(self, ctx):
         await self.playing(ctx)
@@ -907,8 +903,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
     
     @cog_ext.cog_slash(
         name="jump",
-        description="Jump to nth track in queue.",
-        guild_ids=GUILD_IDS,
+        description="Jump to nth track in queue."
     )
     async def jump_slash(self, ctx, index: int):
         await self.jump(ctx, index)
@@ -950,8 +945,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
     
     @cog_ext.cog_slash(
         name="restart",
-        description="Restart currently playing track.",
-        guild_ids=GUILD_IDS,
+        description="Restart currently playing track."
     )
     async def restart_slash(self, ctx):
         await self.restart(ctx)
@@ -997,8 +991,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
     
     @cog_ext.cog_slash(
         name="seek",
-        description="Seek to nth minute in currently playing track.",
-        guild_ids=GUILD_IDS,
+        description="Seek to nth minute in currently playing track."
     )
     async def seek_slash(self, ctx, position: str):
         await self.seek(ctx, position)
@@ -1029,7 +1022,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
     
     #---------------------------------------------------------------------
 
-    @cog_ext.cog_context_menu(target=ContextMenuType.MESSAGE, name="🎵 play 🎵", guild_ids=GUILD_IDS)
+    @cog_ext.cog_context_menu(target=ContextMenuType.MESSAGE, name="🎵 play 🎵")
     async def play_message_menu(self, ctx: MenuContext):
         await ctx.send(f'{ctx.author} used play from message menu.')
         await self.play(ctx, audio=ctx.target_message.clean_content)
@@ -1045,7 +1038,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
             await ctx.send("Slash command error.")
             traceback.print_exc()
     
-    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="play from Spotify", guild_ids=GUILD_IDS)
+    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="play from Spotify")
     async def spotify_user_menu(self, ctx: MenuContext):
         await ctx.send(f"{ctx.author.display_name} used play from Spotify on {ctx.target_author.display_name}!")
         user = ctx.guild.get_member(ctx.target_author.id)

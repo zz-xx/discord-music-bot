@@ -8,8 +8,6 @@ from discord.ext import commands
 from discord_slash import cog_ext, SlashContext, MenuContext
 from discord_slash.model import ContextMenuType
 
-#really didn't want to do this
-GUILD_IDS = [435683837641621514]
 
 
 class Info(commands.Cog):
@@ -18,8 +16,7 @@ class Info(commands.Cog):
 
     @cog_ext.cog_slash(
         name="info",
-        description="Get some useful (or not) information about the bot.",
-        guild_ids=GUILD_IDS,
+        description="Get some useful (or not) information about the bot."
     )
     async def info(self, ctx: SlashContext):
         """
@@ -97,8 +94,7 @@ class Info(commands.Cog):
 
     @cog_ext.cog_slash(
         name="serverinfo",
-        description="Get some useful (or not) information about the server.",
-        guild_ids=GUILD_IDS,
+        description="Get some useful (or not) information about the server."
     )
     async def serverinfo(self, ctx: SlashContext):
         """Display information about the current guild, such as owner, region, emojis, and roles."""
@@ -127,8 +123,7 @@ class Info(commands.Cog):
 
     @cog_ext.cog_slash(
         name="userinfo",
-        description="Get some useful (or not) information about the server.",
-        guild_ids=GUILD_IDS,
+        description="Get some useful (or not) information about the server."
     )
     async def userinfo(self, ctx: SlashContext):
         """Display information about a user, such as status and roles."""
@@ -169,8 +164,7 @@ class Info(commands.Cog):
 
     @cog_ext.cog_slash(
         name="ping",
-        description="Check if the bot is alive.",
-        guild_ids=GUILD_IDS,
+        description="Check if the bot is alive."
     )
     async def ping(self, context: SlashContext):
         """
@@ -183,12 +177,12 @@ class Info(commands.Cog):
         )
         await context.send(embed=embed)
     
-    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="👻 profile pic 👻", guild_ids=GUILD_IDS)
+    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="👻 profile pic 👻")
     async def profile_pic_menu(self, ctx: MenuContext):
         await ctx.send(f"{ctx.author.display_name} got profile pic of {ctx.target_author.display_name}!")
         await ctx.send(str(ctx.target_author.avatar_url))
     
-    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="👻 profile banner 👻", guild_ids=GUILD_IDS)
+    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="👻 profile banner 👻")
     async def banner_pic_menu(self, ctx: MenuContext):
         
         req = await ctx.bot.http.request(discord.http.Route("GET", "/users/{uid}", uid=ctx.target_author.id))

@@ -3,7 +3,7 @@ import os
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
-from slash_help import SlashHelp
+
 
 from helpers import core
 
@@ -33,7 +33,7 @@ bot.command_prefix = commands.when_mentioned_or(bot.config['bot_prefix'])
 bot.load_spotify_client()
 
 slash = SlashCommand(bot, sync_commands=True)
-slash_help = SlashHelp(bot, slash)
+
 
 if __name__ == "__main__":
 
