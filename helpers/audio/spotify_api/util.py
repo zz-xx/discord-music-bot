@@ -6,13 +6,15 @@ import json
 LOGGER = logging.getLogger(__name__)
 
 
-class CacheFileHandler:
+class CacheFileHandler():
     """
     Handles reading and writing cached Spotify authorization tokens
     as json files on disk.
     """
 
-    def __init__(self, cache_path=None, username=None):
+    def __init__(self,
+                 cache_path=None,
+                 username=None):
         """
         Parameters:
              * cache_path: May be supplied, will otherwise be generated
@@ -25,7 +27,7 @@ class CacheFileHandler:
             self.cache_path = cache_path
         else:
             cache_path = ".cache"
-            username = username
+            username = (username)
             if username:
                 cache_path += "-" + str(username)
             self.cache_path = cache_path
@@ -53,4 +55,5 @@ class CacheFileHandler:
             f.write(json.dumps(token_info))
             f.close()
         except IOError:
-            LOGGER.warning("Couldn't write token to cache at: %s", self.cache_path)
+            LOGGER.warning('Couldn\'t write token to cache at: %s',
+                           self.cache_path)

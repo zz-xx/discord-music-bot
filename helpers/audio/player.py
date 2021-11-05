@@ -67,9 +67,10 @@ class Player(wavelink.Player):
             return m.author == ctx.author and m.channel == ctx.channel
 
         search_results = [
-            f"{t.title} ({t.length//60000}:{str(t.length%60).zfill(2)})"
+            f"{t.title} ({t.length//60000}:{str(t.length%60).zfill(2)})"[:100]
             for i, t in enumerate(tracks[:5])
         ]
+
         number_emotes = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
         options = [
             create_select_option(

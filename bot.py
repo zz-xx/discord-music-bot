@@ -4,7 +4,9 @@ import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
 
+
 from helpers import core
+
 
 intents = discord.Intents.default()
 
@@ -14,8 +16,8 @@ intents.integrations = False
 intents.invites = False
 intents.reactions = False
 intents.typing = False
-intents.presences = False
 intents.webhooks = False
+intents.presences = True
 intents.members = True
 
 bot = core.Bot(
@@ -23,11 +25,11 @@ bot = core.Bot(
     case_insensitive=True,
     intents=intents,
     help_command=None,
-    config_file="config.json",
+    config_file = "config.json"
 )
 
 bot.load_config()
-bot.command_prefix = commands.when_mentioned_or([bot.config["bot_prefix"]])
+bot.command_prefix = commands.when_mentioned_or(bot.config['bot_prefix'])
 bot.load_spotify_client()
 
 slash = SlashCommand(bot, sync_commands=True)
@@ -47,4 +49,4 @@ if __name__ == "__main__":
                 except Exception as error:
                     print(f"Unable to load {module}: {error}")
 
-bot.run(bot.config["token"])
+bot.run(bot.config['token'])

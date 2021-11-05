@@ -6,7 +6,7 @@ import sys
 
 import discord
 from discord.ext import commands
-from discord_slash import SlashCommand, SlashContext
+from discord_slash import SlashContext
 
 
 class Events(commands.Cog):
@@ -21,22 +21,16 @@ class Events(commands.Cog):
         print(f"Running on: {platform.system()} {platform.release()} ({os.name})")
         print("-------------------")
 
-        await self.bot.change_presence(
-            activity=discord.Streaming(
-                name="Use slash commands.", url="https://www.twitch.tv/pewdiepie"
-            )
-        )
+        await self.bot.change_presence(activity=discord.Streaming(name='Use slash commands.', url='https://www.twitch.tv/pewdiepie'))
 
+    '''
     @commands.Cog.listener()
     async def on_message(self, message):
         # Ignores if a command is being executed by a bot or by the bot itself
         if message.author == self.bot.user or message.author.bot:
             return
         await self.bot.process_commands(message)
-
-    @commands.Cog.listener()
-    async def on_command_error(context, error):
-        raise error
+    '''
 
     @commands.Cog.listener()
     async def on_slash_command(self, ctx: SlashContext):
