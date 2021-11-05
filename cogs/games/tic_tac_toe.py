@@ -2,19 +2,13 @@ import asyncio
 import copy
 import enum
 import math
-import random
 import typing
 
-import discord
-import discord_slash.model
 from discord.ext import commands
 from discord_slash import cog_ext, SlashContext, ComponentContext
 from discord_slash.cog_ext import cog_component
-from discord_slash.utils import manage_commands, manage_components
+from discord_slash.utils import manage_components
 from discord_slash.model import ButtonStyle
-
-#really didn't want to do this
-GUILD_IDS = [435683837641621514]
 
 
 class GameState(enum.IntEnum):
@@ -156,8 +150,7 @@ class TicTacToe(commands.Cog):
     @cog_ext.cog_subcommand(
         base="tic_tac_toe",
         name="start",
-        description="Start a game of tic tac toe",
-        guild_ids=GUILD_IDS,
+        description="Start a game of tic tac toe"
     )
     async def ttt_start(self, ctx: SlashContext):
         await ctx.send(
