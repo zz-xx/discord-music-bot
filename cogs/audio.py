@@ -7,10 +7,10 @@ import aiohttp
 import discord
 import wavelink
 from discord.ext import commands
-from discord_slash import cog_ext
 from discord.ext.commands import CommandError
+from discord_slash import cog_ext, MenuContext
 from discord_slash.error import SlashCommandError
-
+from discord_slash.model import ContextMenuType
 
 from helpers.audio.exception_handler import *
 from helpers.audio.queue import RepeatMode
@@ -235,7 +235,7 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
     async def play_slash(self, ctx, *, audio: t.Optional[str]):
         await self.play(ctx, audio=audio)
     
-    @commands.command(name="play", description="Play music.", aliases=["p"])
+    @commands.command(name="play", description="Play music.")
     async def play_command(self, ctx, *, audio: t.Optional[str]):
         await self.play(ctx, audio=audio)
     
@@ -244,6 +244,17 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
     components from discord slash are being used 
     (also add logging here) (also make a function to post logs in discord server)
     '''
+    @play_slash.error
+    async def play_slash_error(self, ctx, exc):
+        if isinstance(exc, QueueIsEmpty):
+            await ctx.send("No songs to play as the queue is empty.")
+        elif isinstance(exc, NoVoiceChannel):
+            await ctx.send("No suitable voice channel was provided.")
+        #if none of the above exception then this general exception
+        elif isinstance(exc, SlashCommandError):
+            await ctx.send("Slash command error.")
+            traceback.print_exc()
+
     @play_command.error
     async def play_command_error(self, ctx, exc):
         if isinstance(exc, QueueIsEmpty):
@@ -255,8 +266,109 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
             await ctx.send("Command error.")
             traceback.print_exc()
         
-    @play_slash.error
-    async def play_slash_error(self, ctx, exc):
+    #---------------------------------------------------------------------
+
+    async def no_select_play(self, ctx, *, audio: t.Optional[str]):
+        query = audio
+        player = self.get_player(ctx)
+
+        if not player.is_connected:
+            await player.connect(ctx)
+
+        if query is None:
+            if player.queue.is_empty:
+                raise QueueIsEmpty
+
+            await player.set_pause(False)
+            await ctx.send("Playback resumed.")
+
+        else:
+            if "https://open.spotify.com/track" in query:
+                await ctx.send("Spotify track detected.")
+                response = await ctx.bot.spotify_client.track(track_id=query)
+                query = f"{response['name']} {response['album']['artists'][0]['name']}"
+                if not re.match(self.url_regex, query):
+                    query = f"ytsearch:{query}"
+
+                test = await self.wavelink.get_tracks(query)
+
+                try:
+                    await player.add_spotify_tracks(ctx, [test[0]])
+                    await ctx.send(f"Added {response['name']} to queue.")
+                except Exception as e:
+                    print(e)
+
+            elif "https://open.spotify.com/playlist" in query:
+                await ctx.send("Spotify playlist detected.")
+                response = await ctx.bot.spotify_client.playlist_items(
+                    query,
+                    offset=0,
+                    fields="items.track.name,items.track.artists.name,total",
+                    additional_types=["track"],
+                )
+
+                for item in response["items"]:
+
+                    query = f"{item['track']['name']} {item['track']['artists'][0]['name']}".strip(
+                        "<>"
+                    )
+                    if not re.match(self.url_regex, query):
+                        query = f"ytsearch:{query}"
+
+                    test = await self.wavelink.get_tracks(query)
+
+                    try:
+                        await player.add_spotify_tracks(ctx, [test[0]])
+                    except Exception as e:
+                        print(e)
+
+                await ctx.send(f"Added {response['total']} tracks.")
+
+            elif "https://open.spotify.com/album" in query:
+                await ctx.send("Spotify album detected.")
+                response = await ctx.bot.spotify_client.album_tracks(query)
+                artist_name = response["items"][0]["artists"][0]["name"]
+                print(artist_name)
+
+                for item in response["items"]:
+
+                    query = f"{item['name']} {artist_name}"
+                    if not re.match(self.url_regex, query):
+                        query = f"ytsearch:{query}"
+
+                    test = await self.wavelink.get_tracks(query)
+
+                    try:
+                        await player.add_spotify_tracks(ctx, [test[0]])
+                    except Exception as e:
+                        print(e)
+
+                await ctx.send(f"Added {response['total']} tracks.")
+
+            else:
+                query = query.strip("<>")
+                if not re.match(self.url_regex, query):
+                    query = f"ytsearch:{query}"
+
+                test = await self.wavelink.get_tracks(query)
+
+                try:
+                    await player.add_spotify_tracks(ctx, [test[0]])
+                except Exception as e:
+                    print(e)
+                
+                await ctx.send(f"Added **{test[0].title}** to queue.")
+    
+    @cog_ext.cog_slash(name="p", description="Same as play but without select dropdown.", guild_ids=GUILD_IDS)
+    async def no_select_play_slash(self, ctx, *, audio: t.Optional[str]):
+        await self.no_select_play(ctx, audio=audio)
+    
+    @commands.command(name="p", description="Same as play but without select dropdown.")
+    async def no_select_play_command(self, ctx, *, audio: t.Optional[str]):
+        await self.no_select_play(ctx, audio=audio)
+    
+    @no_select_play_slash.error
+    async def no_select_play_slash_error(self, ctx, exc):
         if isinstance(exc, QueueIsEmpty):
             await ctx.send("No songs to play as the queue is empty.")
         elif isinstance(exc, NoVoiceChannel):
@@ -265,7 +377,18 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         elif isinstance(exc, SlashCommandError):
             await ctx.send("Slash command error.")
             traceback.print_exc()
-    
+
+    @no_select_play_command.error
+    async def no_select_play_command_error(self, ctx, exc):
+        if isinstance(exc, QueueIsEmpty):
+            await ctx.send("No songs to play as the queue is empty.")
+        elif isinstance(exc, NoVoiceChannel):
+            await ctx.send("No suitable voice channel was provided.")
+        #if none of the above exception then this general exception
+        elif isinstance(exc, CommandError):
+            await ctx.send("Command error.")
+            traceback.print_exc()
+
     #---------------------------------------------------------------------
 
     async def pause(self, ctx):
@@ -903,6 +1026,51 @@ class AudioSlash(commands.Cog, wavelink.WavelinkMixin):
         elif isinstance(exc, CommandError):
             await ctx.send("Command error.")
             traceback.print_exc()
+    
+    #---------------------------------------------------------------------
+
+    @cog_ext.cog_context_menu(target=ContextMenuType.MESSAGE, name="🎵 play 🎵", guild_ids=GUILD_IDS)
+    async def play_message_menu(self, ctx: MenuContext):
+        await ctx.send(f'{ctx.author} used play from message menu.')
+        await self.play(ctx, audio=ctx.target_message.clean_content)
+
+    @play_message_menu.error
+    async def play_message_menu_error(self, ctx, exc):
+        if isinstance(exc, QueueIsEmpty):
+            await ctx.send("No songs to play as the queue is empty.")
+        elif isinstance(exc, NoVoiceChannel):
+            await ctx.send("No suitable voice channel was provided.")
+        #if none of the above exception then this general exception
+        elif isinstance(exc, SlashCommandError):
+            await ctx.send("Slash command error.")
+            traceback.print_exc()
+    
+    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="play from Spotify", guild_ids=GUILD_IDS)
+    async def spotify_user_menu(self, ctx: MenuContext):
+        await ctx.send(f"{ctx.author.display_name} used play from Spotify on {ctx.target_author.display_name}!")
+        user = ctx.guild.get_member(ctx.target_author.id)
+        #await ctx.send(ctx.target_author.id)
+        #await ctx.send(str(user.activities[1].title))
+        if isinstance(user.activity, discord.activity.Spotify):
+            await self.no_select_play(ctx, audio = f"{user.activity.title} {user.activity.artists[0]}")
+        #check documentation
+        elif isinstance(user.activities[1], discord.activity.Spotify):
+            #await ctx.send(str(user.activities[1].title))
+            await self.no_select_play(ctx, audio = f"{user.activities[1].title} {user.activities[1].artists[0]}")
+        else:
+            await ctx.send(f"{ctx.target_author.display_name} is not playing anything on Spotify.")
+
+    @spotify_user_menu.error
+    async def spotify_user_menu_error(self, ctx, exc):
+        if isinstance(exc, QueueIsEmpty):
+            await ctx.send("No songs to play as the queue is empty.")
+        elif isinstance(exc, NoVoiceChannel):
+            await ctx.send("No suitable voice channel was provided.")
+        #if none of the above exception then this general exception
+        elif isinstance(exc, SlashCommandError):
+            await ctx.send("Slash command error.")
+            traceback.print_exc()
+
 
 def setup(bot):
     bot.add_cog(AudioSlash(bot))

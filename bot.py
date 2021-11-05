@@ -3,8 +3,10 @@ import os
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
+from slash_help import SlashHelp
 
 from helpers import core
+
 
 intents = discord.Intents.default()
 
@@ -14,8 +16,8 @@ intents.integrations = False
 intents.invites = False
 intents.reactions = False
 intents.typing = False
-intents.presences = False
 intents.webhooks = False
+intents.presences = True
 intents.members = True
 
 bot = core.Bot(
@@ -31,7 +33,7 @@ bot.command_prefix = commands.when_mentioned_or(bot.config['bot_prefix'])
 bot.load_spotify_client()
 
 slash = SlashCommand(bot, sync_commands=True)
-
+slash_help = SlashHelp(bot, slash)
 
 if __name__ == "__main__":
 

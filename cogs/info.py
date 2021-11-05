@@ -5,7 +5,8 @@ import sys
 
 import discord
 from discord.ext import commands
-from discord_slash import cog_ext, SlashContext
+from discord_slash import cog_ext, SlashContext, MenuContext
+from discord_slash.model import ContextMenuType
 
 #really didn't want to do this
 GUILD_IDS = [435683837641621514]
@@ -181,6 +182,24 @@ class Info(commands.Cog):
             color=0x42F56C,
         )
         await context.send(embed=embed)
+    
+    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="👻 profile pic 👻", guild_ids=GUILD_IDS)
+    async def profile_pic_menu(self, ctx: MenuContext):
+        await ctx.send(f"{ctx.author.display_name} got profile pic of {ctx.target_author.display_name}!")
+        await ctx.send(str(ctx.target_author.avatar_url))
+    
+    @cog_ext.cog_context_menu(target=ContextMenuType.USER, name="👻 profile banner 👻", guild_ids=GUILD_IDS)
+    async def banner_pic_menu(self, ctx: MenuContext):
+        
+        req = await ctx.bot.http.request(discord.http.Route("GET", "/users/{uid}", uid=ctx.target_author.id))
+        banner_id = req["banner"]
+        if banner_id:
+            await ctx.send(f"{ctx.author.display_name} got banner  image of {ctx.target_author.display_name}!")
+            banner_url = f"https://cdn.discordapp.com/banners/{ctx.target_author.id}/{banner_id}?size=1024"
+            await ctx.send(banner_url)
+        else:
+            await ctx.send(f"User {ctx.target_author.display_name} doesn't have a banner.")
+
 
 
 def setup(bot):

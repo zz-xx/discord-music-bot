@@ -129,7 +129,7 @@ class SpotifyClientCredentials(SpotifyAuthBase):
 
         return token_info
 
-    async def get_access_token(self, as_dict=True, check_cache=True):
+    async def get_access_token(self, as_dict=True, check_cache=False):
         """
         If a valid access token is in memory, returns it
         Else feches a new token and returns it

@@ -2,12 +2,15 @@ import asyncio
 import copy
 import enum
 import math
+import random
 import typing
 
+import discord
+import discord_slash.model
 from discord.ext import commands
 from discord_slash import cog_ext, SlashContext, ComponentContext
 from discord_slash.cog_ext import cog_component
-from discord_slash.utils import manage_components
+from discord_slash.utils import manage_commands, manage_components
 from discord_slash.model import ButtonStyle
 
 #really didn't want to do this
