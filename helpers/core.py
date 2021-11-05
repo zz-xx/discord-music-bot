@@ -1,6 +1,5 @@
 import json
 
-import aiohttp
 from discord.ext import commands
 
 from helpers.audio.spotify_api.spotify_client import Spotify
@@ -9,8 +8,7 @@ from helpers.audio.spotify_api.oauth2 import SpotifyClientCredentials
 class Bot(commands.Bot):
 
     """ 
-    This is a custom object which extends default commands.Bot class and provides
-    a configuration handler and a common aiohttp ClientSession.
+    This is a custom object which extends default commands.Bot class
     """ 
 
     def __init__(self, *args, **kwargs):
@@ -22,8 +20,7 @@ class Bot(commands.Bot):
 
     def load_config(self, filename: str=None):
         """
-        Load congig from a .JSON file. If not specified will default to 
-        `Bot.config_file`.
+        Load config from a .JSON file. If not specified will default to `Bot.config_file`.
         """
 
         if not filename:

@@ -27,12 +27,12 @@ class Info(commands.Cog):
         process = psutil.Process(os.getpid())
 
         description = (
-            "<:info:483340220859678763> [**Bot Info**](https://bot.x86.fun/)\n"
+            "<:info:483340220859678763> **Bot Info**\n"
         )
         description += f"`{ctx.bot.user.name} is a simple and modular Discord bot written in Python.`\n\u200b\n"
 
         description += "<:server:483088255403687948> **Server**\n"
-        description += "Click [**here**](https://discord.gg/rzYybFd)\n\u200b\n"
+        description += "Click [**here**](https://example.com)\n\u200b\n"
 
         # this is lazy implementation, will change it later
         description += "<:version:483351547489681409> **Version**\n "
