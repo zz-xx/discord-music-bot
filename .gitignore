@@ -193,3 +193,5 @@ vscode/
 config.json
 .cache
 cogs/test.py
+
+.vscode/
