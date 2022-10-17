@@ -1,51 +1,25 @@
-import os
+import asyncio
 
 import discord
-from discord.ext import commands
-from discord_slash import SlashCommand
 
-from helpers import core
+from core.bot import Bot
+from cogs.audio import context_menu_commands
 
-
-intents = discord.Intents.default()
-
-intents.bans = False
-intents.dm_messages = False
-intents.integrations = False
-intents.invites = False
-intents.reactions = False
-intents.typing = False
-intents.webhooks = False
-intents.presences = True
-intents.members = True
-
-bot = core.Bot(
-    command_prefix="",
-    case_insensitive=True,
-    intents=intents,
-    help_command=None,
-    config_file = "config.json"
-)
-
-bot.load_config()
-bot.command_prefix = commands.when_mentioned_or(bot.config['bot_prefix'])
-bot.load_spotify_client()
-
-slash = SlashCommand(bot, sync_commands=True)
+# t
+bot = Bot(intents=discord.Intents.all())
 
 
-if __name__ == "__main__":
+async def main():
+    await bot.load_extension("cogs.audio.disconnect")
+    await bot.load_extension("cogs.audio.listeners")
+    await bot.load_extension("cogs.audio.play")
+    await bot.load_extension("cogs.audio.skip")
+    await bot.load_extension("cogs.audio.queue")
+    await bot.load_extension("cogs.events")
+    
+    context_menu_commands.init(bot)
 
-    for dirpath, dirnames, filenames in os.walk("cogs"):
-        for filename in filenames:
-            if filename.endswith(".py"):
-                fullpath = os.path.join(dirpath, filename).split(os.path.sep)
-                module = ".".join(fullpath)[:-3]
-                print(module)
 
-                try:
-                    bot.load_extension(module)
-                except Exception as error:
-                    print(f"Unable to load {module}: {error}")
+asyncio.run(main())
 
-bot.run(bot.config['token'])
+bot.run(bot.config["token"])

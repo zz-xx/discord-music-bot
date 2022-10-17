@@ -1,0 +1,17 @@
+{
+    "bot_prefix": "-",
+    "token": "your-token-here",
+    "guild_ids": [123456789123456789],
+    "spotify_api": {
+        "client_id": "your-client-id-here", 
+        "client_secret": "your-client-secret-here"
+    },
+    "nodes": [
+        {
+            "host": "host",
+            "port": 1234,
+            "password": "password"
+        }
+    ],
+    "owners": [123456789123456789, 123456789123456789]
+}
