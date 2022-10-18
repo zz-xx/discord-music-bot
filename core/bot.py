@@ -24,6 +24,9 @@ class Bot(commands.Bot):
             self.tree.copy_global_to(guild=guild)
             await self.tree.sync(guild=guild)
 
+        #global sync
+        await self.tree.sync()
+        
         # for now using only first node, in future use all nodes as fail safe
         self.wavelink_node = await wavelink.NodePool.create_node(
             bot=self,
