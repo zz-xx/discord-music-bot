@@ -55,7 +55,7 @@ class Play(commands.Cog):
         elif "https://www.youtube.com/playlist" in search:
             if not ctx.voice_client:
                 vc: wavelink.Player = await ctx.author.voice.channel.connect(
-                    cls=wavelink.Player
+                    cls=wavelink.Player, self_deaf=True
                 )
                 playlist = await vc.node.get_playlist(wavelink.YouTubePlaylist, search)
                 # print(playlist.tracks)
@@ -78,7 +78,7 @@ class Play(commands.Cog):
             partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
             if not ctx.voice_client:
                 vc: wavelink.Player = await ctx.author.voice.channel.connect(
-                    cls=wavelink.Player
+                    cls=wavelink.Player, self_deaf=True
                 )
                 track = await vc.play(partial)
                 await ctx.send(f"Now playing: {track.title}")
