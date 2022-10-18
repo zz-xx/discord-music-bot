@@ -18,11 +18,12 @@ class Bot(commands.Bot):
         )
 
     async def setup_hook(self):
-        # sync with priority guilds right away, instead of waiting for global sync
-        for guild_id in self.config["guild_ids"]:
-            guild = discord.Object(id=guild_id)
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)
+        # sync or remove commands of priority guilds right away, instead of waiting for global sync
+        #for guild_id in self.config["guild_ids"]:
+            #guild = discord.Object(id=guild_id)
+            #self.tree.copy_global_to(guild=guild)
+            #self.tree.clear_commands(guild=guild)
+            #await self.tree.sync(guild=guild)
 
         #global sync
         await self.tree.sync()
