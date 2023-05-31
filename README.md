@@ -9,8 +9,8 @@ A simple Python music bot for Discord using Lavalink and slash commands that als
 - [x] playing
 - [x] queue
 - [x] skip
-- [ ] pause
-- [ ] unpause
+- [x] pause
+- [x] unpause
 - [ ] search (interaction dropdown)
 - [ ] back
 - [ ] jump
