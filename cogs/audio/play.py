@@ -1,4 +1,5 @@
 from typing import Union
+import re
 
 import discord
 import wavelink
@@ -10,6 +11,21 @@ from wavelink.ext import spotify
 class Play(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.soundcloud_playlist_regex = re.compile(
+            r"^(https?:\/\/)?(www\.)?soundcloud\.com\/.*\/sets\/.*$"
+        )
+        self.soundcloud_track_regex = re.compile(
+            r"^https:\/\/soundcloud\.com\/(?:[^\/]+\/){1}[^\/]+$"
+        )
+        self.youtube_playlist_regex = re.compile(
+            r"(https://)(www\.)?(youtube\.com)\/(?:watch\?v=|playlist)?(?:.*)?&?(list=.*)"
+        )
+        self.youtube_track_regex = re.compile(
+            r"^https?://(?:www\.)?youtube\.com/watch\?v=[a-zA-Z0-9_-]{11}$"
+        )
+        self.youtubemusic_track_regex = re.compile(
+            r"(?:https?:\/\/)?(?:www\.)?(?:music\.)?youtube\.com\/(?:watch\?v=|playlist\?list=)[\w-]+"
+        )
 
     @commands.hybrid_command(name="play", with_app_command=True)
     async def play(self, ctx: commands.Context, *, search: str):
@@ -30,65 +46,74 @@ class Play(commands.Cog):
                 await ctx.send("Bot is already playing in a voice channel.")
                 return
 
-        await ctx.send(f"{search}")
+        if not ctx.voice_client:
+            vc: wavelink.Player = await ctx.author.voice.channel.connect(
+                cls=wavelink.Player, self_deaf=True
+            )
+        else:
+            vc: wavelink.Player = ctx.voice_client
 
-        # this is spotify playlist or album
-        if (
-            "https://open.spotify.com/playlist" in search
-            or "https://open.spotify.com/album" in search
-        ):
-            # this is spotify playlist
-            if not ctx.voice_client:
-                vc: wavelink.Player = await ctx.author.voice.channel.connect(
-                    cls=wavelink.Player, self_deaf=True
+        vc.autoplay = True
+
+        if self.youtube_track_regex.match(search):
+            track = (
+                await vc.current_node.get_tracks(
+                    cls=wavelink.YouTubeTrack, query=search
                 )
-                async for partial in spotify.SpotifyTrack.iterator(
-                    query=search, partial_tracks=True
-                ):
-                    await self.add_spotify_track(ctx, partial)
+            )[0]
+            if vc.is_playing():
+                await vc.queue.put_wait(track)
             else:
-                async for partial in spotify.SpotifyTrack.iterator(
-                    query=search, partial_tracks=True
-                ):
-                    await self.add_track(ctx, partial)
+                await vc.play(track)
+            await ctx.send(f"Added {track} to queue.")
 
-        elif "https://www.youtube.com/playlist" in search:
-            if not ctx.voice_client:
-                vc: wavelink.Player = await ctx.author.voice.channel.connect(
-                    cls=wavelink.Player, self_deaf=True
-                )
-                playlist = await vc.node.get_playlist(wavelink.YouTubePlaylist, search)
-                # print(playlist.tracks)
+        elif self.youtube_playlist_regex.match(search):
+            playlist = await wavelink.YouTubePlaylist.search(search, return_first=True)
+            for track in playlist.tracks:
+                await vc.queue.put_wait(track)
+            if not vc.is_playing():
+                await vc.play(vc.queue.get())
+            await ctx.send(f"Added {len(playlist.tracks)} tracks to queue.")
 
-                if len(playlist.tracks) == 1:
-                    track = await vc.play(playlist.tracks[0])
-                    await ctx.send(f"Now playing: {track.title}")
+        elif "spotify.com" in search:
+            decoded = spotify.decode_url(search)
+            if decoded and decoded["type"] is not spotify.SpotifySearchType.unusable:
+                if decoded["type"] is spotify.SpotifySearchType.playlist:
+                    track_count = 0
+                    async for track in spotify.SpotifyTrack.iterator(query=search):
+                        track_count += 1
+                        await vc.queue.put_wait(track)
+                    if not vc.is_playing():
+                        await vc.play(vc.queue.get())
+                    await ctx.send(f"Added {track_count} tracks to queue.")
+
+                elif decoded["type"] is spotify.SpotifySearchType.album:
+                    track_count = 0
+                    async for track in spotify.SpotifyTrack.iterator(query=search):
+                        track_count += 1
+                        await vc.queue.put_wait(track)
+                    if not vc.is_playing():
+                        await vc.play(vc.queue.get())
+                    await ctx.send(f"Added {track_count} tracks to queue.")
                 else:
-                    track = await vc.play(playlist.tracks[0])
-                    await ctx.send(f"Now playing: {track.title}")
-                    for track in playlist.tracks[1:]:
-                        await self.add_track(ctx, track)
-            else:
-                vc: wavelink.Player = ctx.voice_client
-                playlist = await vc.node.get_playlist(wavelink.YouTubePlaylist, search)
-                for track in playlist.tracks:
-                    await self.add_track(ctx, track)
+                    track = await spotify.SpotifyTrack.search(search)
+                    if vc.is_playing():
+                        await vc.queue.put_wait(track)
+                    else:
+                        await vc.play(track)
+                    await ctx.send(f"Added {track} to queue.")
 
         else:
-            partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
-            if not ctx.voice_client:
-                vc: wavelink.Player = await ctx.author.voice.channel.connect(
-                    cls=wavelink.Player, self_deaf=True
-                )
-                track = await vc.play(partial)
-                await ctx.send(f"Now playing: {track.title}")
+            track = await wavelink.YouTubeTrack.search(search, return_first=True)
+            if vc.is_playing():
+                await vc.queue.put_wait(track)
             else:
-                await self.add_track(ctx, partial)
+                await vc.play(track)
+            await ctx.send(f"Added {track} to queue.")
 
     @commands.hybrid_command(name="play-next", with_app_command=True)
-    async def play_next(self, ctx: commands.Context, *, search: str):
+    async def play_next_command(self, ctx: commands.Context, *, search: str):
         """Put this song next in queue, bypassing others.
-
         Args:
             ctx (commands.Context): _description_
             search (str): _description_
@@ -106,68 +131,48 @@ class Play(commands.Cog):
                 await ctx.send("Bot is already playing in a voice channel.")
                 return
 
-            vc: wavelink.Player = ctx.voice_client
-            partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
-            if not partial:
-                await ctx.send("No tracks found.")
-                return
-
-            vc.queue.put_at_front(partial)
-            await ctx.send(f"Playing {partial.title} next.")
-
-            if not vc.is_playing() and not vc.queue.is_empty:
-                await ctx.send(f"Now playing: {partial.title}")
-                await vc.play(await vc.queue.get_wait())
-
-    async def add_spotify_track(
-        self, ctx: commands.Context, track: wavelink.PartialTrack
-    ):
-        """_summary_
-
-        Args:
-            ctx (commands.Context): _description_
-            track (wavelink.PartialTrack): _description_
-        """
-        if not track:
-            await ctx.send("No tracks found.")
-            return
-
         vc: wavelink.Player = ctx.voice_client
-        await vc.queue.put_wait(track)
 
-        await ctx.send(f"Added {track.title} to the queue.", delete_after=20)
+        if self.youtube_track_regex.match(search):
+            track = (
+                await vc.current_node.get_tracks(
+                    cls=wavelink.YouTubeTrack, query=search
+                )
+            )[0]
+            if vc.is_playing():
+                vc.queue.put_at_front(track)
+            else:
+                await vc.play(track)
+            await ctx.send(f"Added {track} to queue.")
 
-        if not vc.is_playing() and not vc.queue.is_empty:
-            await ctx.send(f"Now playing: {track.title}")
-            await vc.play(await vc.queue.get_wait())
-        elif not vc.is_playing() and vc.queue.is_empty:
-            await ctx.send(f"Now playing: {track.title}")
-            await vc.play(track)
+        elif "spotify.com" in search:
+            decoded = spotify.decode_url(search)
+            if decoded and decoded["type"] is not spotify.SpotifySearchType.unusable:
+                if decoded["type"] is spotify.SpotifySearchType.playlist:
+                    await ctx.send(
+                        "Can't add entire Spotify playlist using **play-next**."
+                    )
+                elif decoded["type"] is spotify.SpotifySearchType.album:
+                    await ctx.send(
+                        "Can't add entire Spotify album using **play-next**."
+                    )
+                else:
+                    track = await spotify.SpotifyTrack.search(search)
+                    if vc.is_playing():
+                        vc.queue.put_at_front(track)
+                    else:
+                        await vc.play(track)
+                    await ctx.send(f"Added {track} to queue.")
 
-    async def add_track(
-        self,
-        ctx: commands.Context,
-        track: Union[wavelink.PartialTrack, wavelink.YouTubeTrack],
-    ):
-        """_summary_
+        else:
+            track = await wavelink.YouTubeTrack.search(search, return_first=True)
+            if vc.is_playing():
+                vc.queue.put_at_front(track)
+            else:
+                await vc.play(track)
 
-        Args:
-            ctx (commands.Context): _description_
-            track (Union[wavelink.PartialTrack, wavelink.YouTubeTrack]): _description_
-        """
-        if not track:
-            await ctx.send("No tracks found.")
-            return
+            await ctx.send(f"Added {track} to queue.")
 
-        vc: wavelink.Player = ctx.voice_client
-        await vc.queue.put_wait(track)
-
-        await ctx.send(f"Added {track.title} to the queue.", delete_after=20)
-
-        if not vc.is_playing() and not vc.queue.is_empty:
-            await ctx.send(f"Now playing: {track.title}")
-            await vc.play(await vc.queue.get_wait())
-
-
+    
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Play(bot))

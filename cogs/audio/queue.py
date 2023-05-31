@@ -50,7 +50,7 @@ class Queue(commands.Cog):
             await ctx.send("Bot is not playing anything.")
             return
 
-        if not vc.is_playing or not vc.track:
+        if not vc.is_playing or not vc.current:
             await ctx.send("Bot is not playing anything.")
         else:
             await ctx.send(embed=self.get_playing_embed(ctx))
@@ -80,10 +80,10 @@ class Queue(commands.Cog):
             icon_url=ctx.author.display_avatar.url,
         )
 
-        if vc.track:
+        if vc.current:
             embed.add_field(
                 name="Currently playing",
-                value=vc.track.title[0:1023],
+                value=vc.current.title[0:1023],
                 inline=False,
             )
 
@@ -121,21 +121,21 @@ class Queue(commands.Cog):
             text=f"Requested by {ctx.author.display_name}",
             icon_url=ctx.author.display_avatar.url,
         )
-        embed.add_field(name="Track title", value=vc.track.title, inline=False)
+        embed.add_field(name="Track title", value=vc.current.title, inline=False)
         embed.add_field(
             name="Artist",
-            value=vc.track.author if vc.track.author else "None",
+            value=vc.current.author if vc.current.author else "None",
             inline=False,
         )
         embed.add_field(
-            name="URI", value=vc.track.uri if vc.track.uri else "None", inline=False
+            name="URI", value=vc.current.uri if vc.current.uri else "None", inline=False
         )
 
-        if isinstance(vc.track, wavelink.YouTubeTrack):
-            embed.set_image(url=vc.track.thumbnail)
+        if isinstance(vc.current, wavelink.YouTubeTrack):
+            embed.set_image(url=vc.current.thumbnail)
 
         position = divmod(vc.position, 60000)
-        length = divmod(vc.track.length, 60000)
+        length = divmod(vc.current.length, 60000)
         embed.add_field(
             name="Position",
             value=f"{int(position[0])}:{round(position[1]/1000):02}/{int(length[0])}:{round(length[1]/1000):02}",

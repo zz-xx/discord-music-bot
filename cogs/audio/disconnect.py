@@ -11,7 +11,6 @@ class Disconnect(commands.Cog):
     @commands.hybrid_command(name="disconnect", with_app_command=True)
     async def disconnect_command(self, ctx: commands.Context):
         """Disconnect bot
-
         Args:
             ctx (commands.Context): _description_
         """
@@ -38,18 +37,18 @@ class Disconnect(commands.Cog):
     @staticmethod
     async def disconnect_player(bot: commands.Bot, guild: discord.Guild):
         """_summary_
-
         Args:
             bot (commands.Bot): _description_
             guild (discord.Guild): _description_
         """
-        player = bot.wavelink_node.get_player(guild)
+        player = bot.node.get_player(guild)
 
         # need to check this because this will be fired two times
         # if disconnected using commands
         if player is not None:
             await player.stop()
             player.queue.clear()
+            player.cleanup()
             await player.disconnect()
 
 

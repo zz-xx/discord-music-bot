@@ -11,7 +11,6 @@ class Skip(commands.Cog):
     @commands.hybrid_command(name="skip", with_app_command=True)
     async def skip_command(self, ctx: commands.Context):
         """Skips currently playing song and play next song in queue.
-
         Args:
             ctx (commands.Context): _description_
         """

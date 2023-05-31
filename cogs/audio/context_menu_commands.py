@@ -10,7 +10,6 @@ bot: Union[commands.Bot, None]
 
 async def context_menu_play(itx: discord.Interaction, message: discord.Message):
     """_summary_
-
     Args:
         itx (discord.Interaction): _description_
         message (discord.Message): _description_
@@ -21,15 +20,17 @@ async def context_menu_play(itx: discord.Interaction, message: discord.Message):
 
     voice_client = discord.utils.get(bot.voice_clients, guild=itx.guild)
 
-    partial = wavelink.PartialTrack(query=message.content, cls=wavelink.YouTubeTrack)
-    if not partial:
+    track = await wavelink.YouTubeTrack.search(query=message.content, return_first=True)
+    if not track:
         await itx.response.send_message("No tracks found.")
 
     if not voice_client:
-        vc: wavelink.Player = await itx.user.voice.channel.connect(cls=wavelink.Player, self_deaf=True)
+        vc: wavelink.Player = await itx.user.voice.channel.connect(
+            cls=wavelink.Player, self_deaf=True
+        )
         print("player initialized")
         await itx.response.defer(ephemeral=True)
-        track = await vc.play(partial)
+        track = await vc.play(track)
         await itx.followup.send(f"Now playing: {track.title}")
         print(f"track title - {track.title}")
 
@@ -41,17 +42,16 @@ async def context_menu_play(itx: discord.Interaction, message: discord.Message):
             return
 
         vc: wavelink.Player = itx.guild.voice_client
-        await vc.queue.put_wait(partial)
-        await itx.response.send_message(f"Added {partial.title} to the queue.")
+        await vc.queue.put_wait(track)
+        await itx.response.send_message(f"Added {track} to the queue.")
 
         if not vc.is_playing() and not vc.queue.is_empty:
-            await itx.channel.send(f"Now playing: {partial.title}")
+            await itx.channel.send(f"Now playing: {track}")
             await vc.play(await vc.queue.get_wait())
 
 
 async def context_menu_play_next(itx: discord.Interaction, message: discord.Message):
     """_summary_
-
     Args:
         itx (discord.Interaction): _description_
         message (discord.Message): _description_
@@ -73,21 +73,21 @@ async def context_menu_play_next(itx: discord.Interaction, message: discord.Mess
 
         vc: wavelink.Player = itx.guild.voice_client
 
-        partial = wavelink.PartialTrack(
-            query=message.content, cls=wavelink.YouTubeTrack
+        track = await wavelink.YouTubeTrack.search(
+            query=message.content, return_first=True
         )
-        if not partial:
+        if not track:
             await itx.response.send_message("No tracks found.")
             return
 
         await itx.response.defer(ephemeral=True)
-        vc.queue.put_at_front(partial)
-        await itx.followup.send(f"Playing {partial.title} next.")
+        vc.queue.put_at_front(track)
+        await itx.followup.send(f"Playing {track} next.")
 
         if not vc.is_playing() and not vc.queue.is_empty:
             await itx.response.defer(ephemeral=True)
             await vc.play(await vc.queue.get_wait())
-            await itx.followup.send(f"Now playing: {partial.title}")
+            await itx.followup.send(f"Now playing: {track}")
 
 
 play_context_menu = app_commands.ContextMenu(
@@ -103,7 +103,6 @@ play_next_context_menu = app_commands.ContextMenu(
 
 def init(input_bot: commands.Bot):
     """_summary_
-
     Args:
         input_bot (commands.Bot): _description_
     """

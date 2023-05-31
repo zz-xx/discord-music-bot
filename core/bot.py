@@ -8,35 +8,40 @@ from wavelink.ext import spotify
 
 class Bot(commands.Bot):
     def __init__(self, *, intents: discord.Intents):
+
         # load config
         self.__load_config()
-
+        
         # set intents and command prefix
         super().__init__(
             intents=intents,
             command_prefix=commands.when_mentioned_or(self.config["bot_prefix"]),
         )
+        
 
     async def setup_hook(self):
         # sync or remove commands of priority guilds right away, instead of waiting for global sync
-        #for guild_id in self.config["guild_ids"]:
-            #guild = discord.Object(id=guild_id)
+        # only for testing
+        # for guild_id in self.config["guild_ids"]:
+        #     guild = discord.Object(id=guild_id)
             #self.tree.copy_global_to(guild=guild)
-            #self.tree.clear_commands(guild=guild)
             #await self.tree.sync(guild=guild)
 
-        #global sync
+        # global sync
         await self.tree.sync()
+
+        #nodes: wavelink.Node = [wavelink.Node(**node) for node in self.config["nodes"]]
         
-        # for now using only first node, in future use all nodes as fail safe
-        self.wavelink_node = await wavelink.NodePool.create_node(
-            bot=self,
-            **self.config["nodes"][0],
-            spotify_client=spotify.SpotifyClient(
-                client_id=self.config["spotify_api"]["client_id"],
-                client_secret=self.config["spotify_api"]["client_secret"],
-            )
-        )
+        # _nodes = list()
+        # for node in self.config["nodes"]:
+        #     print(node)
+        #     node: wavelink.Node = wavelink.Node(uri=node["uri"], password=node["password"], secure=node["secure"])
+        #     _nodes.append(node)
+        sc = spotify.SpotifyClient(**self.config["spotify_api"])
+        
+        node: wavelink.Node = wavelink.Node(**self.config["nodes"][0])
+        self.node = node
+        await wavelink.NodePool.connect(client=self, nodes=[node], spotify=sc)
 
     def __load_config(self, filename: str = None):
         """

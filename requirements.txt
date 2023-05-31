@@ -1,2 +1,2 @@
 discord.py[voice]
-wavelink==1.3.3
+wavelink==2.3.1
