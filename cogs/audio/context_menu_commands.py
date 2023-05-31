@@ -20,7 +20,7 @@ async def context_menu_play(itx: discord.Interaction, message: discord.Message):
 
     voice_client = discord.utils.get(bot.voice_clients, guild=itx.guild)
 
-    track = await wavelink.YouTubeTrack.search(query=message.content, return_first=True)
+    track = await wavelink.YouTubeTrack.search(message.content, return_first=True)
     if not track:
         await itx.response.send_message("No tracks found.")
 
@@ -73,9 +73,7 @@ async def context_menu_play_next(itx: discord.Interaction, message: discord.Mess
 
         vc: wavelink.Player = itx.guild.voice_client
 
-        track = await wavelink.YouTubeTrack.search(
-            query=message.content, return_first=True
-        )
+        track = await wavelink.YouTubeTrack.search(message.content, return_first=True)
         if not track:
             await itx.response.send_message("No tracks found.")
             return
